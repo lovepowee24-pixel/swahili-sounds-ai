@@ -3,10 +3,7 @@ exports.handler = async (event) => {
     if (event.httpMethod !== "POST") {
       return {
         statusCode: 200,
-        body: JSON.stringify({
-          success: true,
-          message: "Swahili Sounds AI Function works!"
-        })
+        body: JSON.stringify({ message: "Gemini function works" })
       };
     }
 
@@ -28,39 +25,30 @@ Andika:
 5. Bridge
 6. Final Chorus
 7. AI music prompt kwa Suno/Udio
-
-Wimbo uwe wa kisasa, wenye hisia, catchy, radio-quality, na maneno mazuri ya Kiswahili.
 `;
 
-    const response = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "gpt-4.1-mini",
-        input: prompt
-      })
-    });
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
+      }
+    );
 
-    const data = await response.json();
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "AI imeshindwa. Jaribu tena.";
 
     return {
       statusCode: 200,
-      body: JSON.stringify({
-        success: true,
-        text: data.output_text || "AI imeshindwa kutengeneza lyrics. Jaribu tena."
-      })
+      body: JSON.stringify({ success: true, text })
     };
-
-  } catch (error) {
+  } catch (err) {
     return {
       statusCode: 500,
-      body: JSON.stringify({
-        success: false,
-        error: error.message
-      })
+      body: JSON.stringify({ success: false, error: err.message })
     };
   }
 };
