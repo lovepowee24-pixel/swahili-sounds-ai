@@ -842,6 +842,7 @@ document.getElementById("logoutBtn").addEventListener("click", doLogout);
 document.getElementById("logoutBtn2").addEventListener("click", doLogout);
 
 document.getElementById("songForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
   const title = document.getElementById("songTitle").value;
   const style = document.getElementById("musicStyle").value;
