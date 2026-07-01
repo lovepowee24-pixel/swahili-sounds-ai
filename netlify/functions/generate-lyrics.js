@@ -7,7 +7,7 @@ exports.handler = async (event) => {
       };
     }
 
-    const { title, style, voice, idea } = JSON.parse(event.body || "{}");
+    const { title, style, voice, mood, idea } = JSON.parse(event.body || "{}");
 
     const prompt = `
 Tengeneza lyrics kamili za wimbo wa Kiswahili.
@@ -15,6 +15,7 @@ Tengeneza lyrics kamili za wimbo wa Kiswahili.
 Title: ${title}
 Style: ${style}
 Voice: ${voice}
+Mood: ${mood}
 Idea/Theme: ${idea}
 
 Andika:
@@ -27,19 +28,38 @@ Andika:
 7. AI music prompt kwa Suno/Udio
 `;
 
-   const res = await fetch(
-  `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-  {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }]
-    })
-  }
-);
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ success: false, error: "GEMINI_API_KEY haijawekwa Netlify." })
+      };
+    }
+
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
+      }
+    );
 
     const data = await res.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "AI imeshindwa. Jaribu tena.";
+
+    if (!res.ok) {
+      return {
+        statusCode: res.status,
+        body: JSON.stringify({ success: false, error: data.error?.message || JSON.stringify(data) })
+      };
+    }
+
+    const text =
+      data.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "AI imeshindwa kutengeneza lyrics.";
 
     return {
       statusCode: 200,
